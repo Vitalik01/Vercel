@@ -35,6 +35,8 @@ jobs:
         if: github.ref == 'refs/heads/staging'
         run: |
           vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
+          # Capture the preview URL
+          echo "::set-output name=PREVIEW_URL::$(vercel --json | jq -r '.[0].url')"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
