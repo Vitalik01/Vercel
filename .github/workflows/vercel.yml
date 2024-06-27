@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - Create-yml-for-vercel-Deploy
       - prod
 
 jobs:
@@ -23,7 +24,7 @@ jobs:
         run: npm install -g vercel
 
       - name: Deploy to Preview
-        if: github.ref == 'refs/heads/'
+        if: github.ref == 'refs/heads/Create-yml-for-vercel-Deploy'
         run: |
           vercel --prod=false --token ${{ secrets.VERCEL_TOKEN }} --confirm 
           # Capture the preview URL
