@@ -3,9 +3,7 @@ name: Automatic Deploy to Vercel
 on:
   push:
     branches:
-      - main
-      - Create-yml-for-vercel-Deploy
-      - prod
+      - "**"
 
 jobs:
   deploy:
@@ -24,7 +22,7 @@ jobs:
         run: npm install -g vercel
 
       - name: Deploy to Preview
-        if: github.ref == 'refs/heads/Create-yml-for-vercel-Deploy'
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/prod'
         run: |
           DEPLOY_OUTPUT=$(vercel --prod=false --confirm --token ${{ secrets.VERCEL_TOKEN }})
           PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*')
@@ -51,12 +49,12 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Comment on Pull Request
+        if: github.event.pull_request.head.ref != 'main' && github.event.pull_request.head.ref != 'prod'
         run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
           PREVIEW_URL=${{ env.PREVIEW_URL }}
           COMMENT="Preview deployment: [Preview Link](${PREVIEW_URL})"
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                -d "{\"body\":\"$COMMENT\"}" \
-               -X POST "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
+               -X POST "https://api.github.com/repos/${{ github.repository }}/issues/comments"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
