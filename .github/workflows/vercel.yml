@@ -96,13 +96,11 @@ jobs:
       - name: Post Comment on Pull Request
         if: github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/prod'
         run: |
-          PR_NUMBER=$(echo "${GITHUB_REF#refs/heads/}")
+          PR_NUMBER=${{ github.event.issue.number }}
           PREVIEW_URL=${{ env.PREVIEW_URL }}
-          COMMIT_ID=$(git rev-parse HEAD)
-          COMMENT_BODY="{\"body\":\"Preview deployment: [Preview Link](${PREVIEW_URL})\",\"commit_id\":\"${COMMIT_ID}\",\"path\":\"file1.txt\",\"start_line\":1,\"start_side\":\"RIGHT\",\"line\":2,\"side\":\"RIGHT\"}"
+          COMMENT_BODY="{\"body\":\"Preview deployment: [Preview Link](${PREVIEW_URL})\"}"
           curl -s -L -X POST \
             -H "Authorization: Bearer ${{ secrets.GIT_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
             -H "Content-Type: application/json" \
             -d "$COMMENT_BODY" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls/1/comments"
+            "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
