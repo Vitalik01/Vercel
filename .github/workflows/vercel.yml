@@ -1,7 +1,11 @@
 name: Automatic Deploy to Vercel
 
 on:
-  pull_request:
+  push:
+    branches:
+      - main
+      - Create-yml-for-vercel-Deploy
+      - prod
 
 jobs:
   deploy:
@@ -47,7 +51,6 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Comment on Pull Request
-        if: startsWith(github.ref, 'refs/pull/')
         run: |
           PR_URL=$(jq -r '.pull_request.url' "$GITHUB_EVENT_PATH")
           if [ -n "${PREVIEW_URL}" ]; then
