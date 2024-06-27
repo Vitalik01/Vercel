@@ -101,5 +101,5 @@ jobs:
            COMMENT_BODY='{"body":"Preview deployment: [Preview Link]('${PREVIEW_URL}')"}'
            curl -L -X POST \
              -H "Authorization: Bearer ${{ secrets.GIT_TOKEN }}" \
-             -d "$COMMENT_BODY" \
+             -d '{"body":"Preview deployment: [Preview Link]('${PREVIEW_URL}')","commit_id":"$(git rev-parse HEAD)","path":"file1.txt","start_line":1,"start_side":"RIGHT","line":2,"side":"RIGHT"}'
              "https://api.github.com/repos/${{ github.repository }}/pulls/1/comments"
