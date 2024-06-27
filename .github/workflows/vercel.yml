@@ -1,29 +1,113 @@
-name: Comment on Pull Request
+name: Automatic Deploy to Vercel
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  push:
+    branches:
+      - "**"
 
 jobs:
-  comment:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Add a comment to the pull request
-        uses: actions/github-script@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
         with:
-          github-token: ${{ secrets.GIT_TOKEN }}
-          script: |
-            const { github } = require('@actions/github');
+          node-version: "20"
 
-            // Customize your comment message here
-            const message = "Thank you for your pull request! We will review it soon.";
+      - name: Install Vercel CLI
+        run: npm install -g vercel
 
-            await github.issues.createComment({
-              ...github.context.repo,
-              issue_number: github.context.issue.number,
-              body: message
-            });
+      - name: Deploy to Preview
+        if: github.ref != 'refs/heads/main' && github.ref != 'refs/heads/prod'
+        run: |
+          DEPLOY_OUTPUT=$(vercel --prod=false --confirm --token ${{ secrets.VERCEL_TOKEN }})
+          PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*')
+          echo "PREVIEW_URL=$PREVIEW_URL" >> $GITHUB_ENV
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Staging
+        if: github.ref == 'refs/heads/main'
+        run: |
+          DEPLOY_OUTPUT=$(vercel --prod=false --token ${{ secrets.VERCEL_TOKEN }} --confirm)
+          PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*')
+          echo "PREVIEW_URL=$PREVIEW_URL" >> $GITHUB_ENV
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/prod'
+        run: |
+          DEPLOY_OUTPUT=$(vercel --prod=true --token ${{ secrets.VERCEL_TOKEN }} --confirm)
+          PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*')
+          echo "PREVIEW_URL=$PREVIEW_URL" >> $GITHUB_ENV
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Update Auth0 Configuration
+        run: |
+          # Obtain Auth0 Management API token
+          AUTH0_TOKEN=$(curl --request POST \
+            --url "https://${{ env.AUTH0_DOMAIN }}/oauth/token" \
+            --header 'content-type: application/json' \
+            --data "{\"client_id\":\"${{ env.AUTH0_CLIENT_ID }}\",\"client_secret\":\"${{ env.AUTH0_CLIENT_SECRET }}\",\"audience\":\"https://${{ env.AUTH0_DOMAIN }}/api/v2/\",\"grant_type\":\"client_credentials\"}" | jq -r '.access_token')
+
+          # Fetch existing client details
+          CLIENT_DETAILS=$(curl --request GET \
+            --url "https://${{ env.AUTH0_DOMAIN }}/api/v2/clients/${{ env.PEARLS_AUTH0_CLIENT_ID }}" \
+            --header "authorization: Bearer $AUTH0_TOKEN")
+
+          # Extract urls
+          CALLBACK_URLS=$(echo "$CLIENT_DETAILS" | jq -c '[.callbacks[]]')
+          ORIGINS=$(echo "$CLIENT_DETAILS" | jq -c '[.web_origins[]]')
+          LOGOUT_URLS=$(echo "$CLIENT_DETAILS" | jq -c '[.allowed_logout_urls[]]')
+
+          # Check if CALLBACK_URLS already contains the PR number
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          if echo "$CALLBACK_URLS" | jq -e --arg PR_NUM "--pr$PR_NUMBER" '.[] | contains($PR_NUM)' > /dev/null; then
+            echo "URL with PR number $PR_NUMBER already exists in CALLBACK_URLS. Stopping execution."
+            echo "should_skip=1" >> $GITHUB_ENV
+            exit 0
+          fi
+
+          # Update callback, web origins, and logout URLs
+          NEW_CALLBACK_URLS=$(echo "$CALLBACK_URLS" | jq -c '. + ["'"${PREVIEW_URL}/api/auth/callback"'"]')
+          NEW_ORIGINS=$(echo "$ORIGINS" | jq -c '. + ["'"$PREVIEW_URL"'"]')
+          NEW_LOGOUT_URLS=$(echo "$LOGOUT_URLS" | jq -c '. + ["'"$PREVIEW_URL"'"]')
+
+          # Update Auth0 client configuration
+          curl --request PATCH \
+            --url "https://${{ env.AUTH0_DOMAIN }}/api/v2/clients/${{ env.PEARLS_AUTH0_CLIENT_ID }}" \
+            --header "authorization: Bearer $AUTH0_TOKEN" \
+            --header 'content-type: application/json' \
+            --data "{\"callbacks\":$NEW_CALLBACK_URLS,\"web_origins\":$NEW_ORIGINS,\"allowed_logout_urls\":$NEW_LOGOUT_URLS}"
+
+        env:
+          PREVIEW_URL: ${{ env.PREVIEW_URL }}
+          AUTH0_DOMAIN: pearls-dev.eu.auth0.com
+          AUTH0_CLIENT_ID: 7CpRLhbKMKq4XQOikgU1L9eF9mx1YGi8
+          PEARLS_AUTH0_CLIENT_ID: q1VmztarYLEAZ7ecuEgdna5BYmL0qCME
+          AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
+
+       - name: Get PR Number
+        id: get_pr
+        run: |
+          # Get the pull request number associated with the commit
+          PR_NUMBER=$(curl -s -H "Authorization: token ${{ secrets.GIT_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" \
+            | jq -r '.[0].number')
+          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
+
+      - name: Post Comment on Pull Request
+        if: env.PR_NUMBER != 'null'
+        run: |
+          COMMENT_BODY="{\"body\":\"Preview deployment: [Preview Link](${PREVIEW_URL})\"}"
+          curl -s -L -X POST \
+            -H "Authorization: Bearer ${{ secrets.GIT_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "$COMMENT_BODY" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${{ env.PR_NUMBER }}/comments"
