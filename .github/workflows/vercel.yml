@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - Create-yml-for-vercel-Deploy
       - prod
 
 jobs:
@@ -24,7 +23,7 @@ jobs:
         run: npm install -g vercel
 
       - name: Deploy to Preview
-        if: github.ref == 'refs/heads/Create-yml-for-vercel-Deploy'
+        if: github.ref == 'refs/heads/'
         run: |
           vercel --prod=false --token ${{ secrets.VERCEL_TOKEN }} --confirm 
           # Capture the preview URL
@@ -51,17 +50,9 @@ jobs:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Comment on Pull Request
+        if: success() && startsWith(github.ref, 'refs/pull/')
         run: |
-          PR_URL=$(jq -r '.pull_request.url' "$GITHUB_EVENT_PATH")
-          if [ -n "${PREVIEW_URL}" ]; then
-            COMMENT="Preview deployment: [Preview Link](${PREVIEW_URL})"
-          elif [ -n "${PRODUCTION_URL}" ]; then
-            COMMENT="Production deployment: [Production Link](${PRODUCTION_URL})"
-          else
-            COMMENT="Deployment link not found."
-          fi
-          curl -s -H "Authorization: token $GITHUB_TOKEN" -d "{\"body\":\"$COMMENT\"}" -X POST "$PR_URL/comments"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PREVIEW_URL: ${{ steps.deploy.outputs.PREVIEW_URL }}
-          PRODUCTION_URL: ${{ steps.deploy.outputs.PRODUCTION_URL }}
+          PR_URL=${{ github.event.pull_request.url }}
+          PREVIEW_URL=${{ steps.deploy.outputs.PREVIEW_URL }}
+          COMMENT="Preview deployment: [Preview Link](${PREVIEW_URL})"
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d "{\"body\":\"$COMMENT\"}" -X POST "$PR_URL/comments"
