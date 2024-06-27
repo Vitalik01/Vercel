@@ -1,12 +1,7 @@
 name: Automatic Deploy to Vercel 
 
-on:
-  push:
-    branches:
-      - main
-      - preview
-      - staging
-      - production
+on: pull_request
+
 
 jobs:
   deploy:
