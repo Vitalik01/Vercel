@@ -20,7 +20,7 @@ jobs:
         run: npm install -g vercel
 
       - name: Deploy to Preview
-        if: startsWith(github.ref, 'refs/heads/preview')
+        if: startsWith(github.ref, 'refs/heads/')
         run: |
           vercel --prod=false --token ${{ secrets.VERCEL_TOKEN }} --confirm 
           # Capture the preview URL
