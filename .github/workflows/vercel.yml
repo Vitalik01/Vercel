@@ -27,7 +27,6 @@ jobs:
         if: github.ref == 'refs/heads/Create-yml-for-vercel-Deploy'
         run: |
           DEPLOY_OUTPUT=$(vercel --prod=false --confirm --token ${{ secrets.VERCEL_TOKEN }})
-
           PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*')
           echo "PREVIEW_URL=$PREVIEW_URL" >> $GITHUB_ENV
         env:
@@ -36,18 +35,18 @@ jobs:
       - name: Deploy to Staging
         if: github.ref == 'refs/heads/main'
         run: |
-          vercel --prod=false --token ${{ secrets.VERCEL_TOKEN }} --confirm
-          PREVIEW_URL=$(vercel ls --token ${{ secrets.VERCEL_TOKEN }} | awk '{print $2}')
-          echo "::set-output name=PREVIEW_URL::$PREVIEW_URL"
+          DEPLOY_OUTPUT=$(vercel --prod=false --token ${{ secrets.VERCEL_TOKEN }} --confirm)
+          PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*')
+          echo "PREVIEW_URL=$PREVIEW_URL" >> $GITHUB_ENV
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Production
         if: github.ref == 'refs/heads/prod'
         run: |
-          vercel --prod=true --token ${{ secrets.VERCEL_TOKEN }} --confirm
-          PREVIEW_URL=$(vercel ls --token ${{ secrets.VERCEL_TOKEN }} | awk '{print $2}')
-          echo "::set-output name=PREVIEW_URL::$PREVIEW_URL"
+          DEPLOY_OUTPUT=$(vercel --prod=true --token ${{ secrets.VERCEL_TOKEN }} --confirm)
+          PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*')
+          echo "PREVIEW_URL=$PREVIEW_URL" >> $GITHUB_ENV
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
@@ -56,6 +55,8 @@ jobs:
           PR_NUMBER=${{ github.event.pull_request.number }}
           PREVIEW_URL=${{ env.PREVIEW_URL }}
           COMMENT="Preview deployment: [Preview Link](${PREVIEW_URL})"
-          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" -d "{\"body\":\"$COMMENT\"}" -X POST "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+               -d "{\"body\":\"$COMMENT\"}" \
+               -X POST "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
