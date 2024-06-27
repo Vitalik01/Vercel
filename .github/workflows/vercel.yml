@@ -26,8 +26,11 @@ jobs:
       - name: Deploy to Preview
         if: github.ref == 'refs/heads/Create-yml-for-vercel-Deploy'
         run: |
-          vercel --prod=false --token ${{ secrets.VERCEL_TOKEN }} --confirm 
-          PREVIEW_URL=$(vercel ls --token ${{ secrets.VERCEL_TOKEN }} | awk '{print $2}')
+          # Deploy to preview environment and capture the URL
+          DEPLOY_OUTPUT=$(vercel --prod=false --confirm --token ${{ secrets.VERCEL_TOKEN }})
+
+          # Extract preview URL from the deployment output
+          PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep 'https://' | tail -n 1)
           echo "::set-output name=PREVIEW_URL::$PREVIEW_URL"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -35,18 +38,28 @@ jobs:
       - name: Deploy to Staging
         if: github.ref == 'refs/heads/main'
         run: |
-          vercel --prod=false --token ${{ secrets.VERCEL_TOKEN }} --confirm
-          PREVIEW_URL=$(vercel ls --token ${{ secrets.VERCEL_TOKEN }} | awk '{print $2}')
+          # Deploy to preview environment and capture the URL
+          DEPLOY_OUTPUT=$(vercel --prod=false --confirm --token ${{ secrets.VERCEL_TOKEN }})
+
+          # Extract preview URL from the deployment output
+          PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep 'https://' | tail -n 1)
           echo "::set-output name=PREVIEW_URL::$PREVIEW_URL"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Production
         if: github.ref == 'refs/heads/prod'
         run: |
-          vercel --prod=true --token ${{ secrets.VERCEL_TOKEN }} --confirm
-          PREVIEW_URL=$(vercel ls --token ${{ secrets.VERCEL_TOKEN }} | awk '{print $2}')
+          # Deploy to preview environment and capture the URL
+          DEPLOY_OUTPUT=$(vercel --prod=true --confirm --token ${{ secrets.VERCEL_TOKEN }})
+
+          # Extract preview URL from the deployment output
+          PREVIEW_URL=$(echo "$DEPLOY_OUTPUT" | grep 'https://' | tail -n 1)
           echo "::set-output name=PREVIEW_URL::$PREVIEW_URL"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
