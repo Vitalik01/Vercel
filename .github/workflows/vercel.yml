@@ -93,14 +93,19 @@ jobs:
           PEARLS_AUTH0_CLIENT_ID: q1VmztarYLEAZ7ecuEgdna5BYmL0qCME
           AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
 
-      - name: Post Comment on Pull Request
-        if: github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/prod'
-        run: |
-          PR_NUMBER=${{ github.event.issue.number }}
-          PREVIEW_URL=${{ env.PREVIEW_URL }}
-          COMMENT_BODY="{\"body\":\"Preview deployment: [Preview Link](${PREVIEW_URL})\"}"
-          curl -s -L -X POST \
-            -H "Authorization: Bearer ${{ secrets.GIT_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d "$COMMENT_BODY" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/2/comments"
+     - name: Add a comment to the pull request
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GIT_TOKEN }}
+          script: |
+            const { context, github } = require('@actions/github');
+            const message = "Preview deployment: [Preview Link](${PREVIEW_URL})";
+
+            await github.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: message
+            });
+
+              \"body\":\"Preview deployment: [Preview Link](${PREVIEW_URL})\"}"
