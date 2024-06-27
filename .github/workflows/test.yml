@@ -1,0 +1,12 @@
+name: Test
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+jobs:
+  example-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract Issue Number
+        run: echo "Issue Number: ${{ github.event.issue.number }}"
