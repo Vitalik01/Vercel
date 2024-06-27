@@ -61,7 +61,7 @@ jobs:
             --url "https://${{ env.AUTH0_DOMAIN }}/api/v2/clients/${{ env.PEARLS_AUTH0_CLIENT_ID }}" \
             --header "authorization: Bearer $AUTH0_TOKEN")
 
-            # Extract urls
+          # Extract urls
           CALLBACK_URLS=$(echo "$CLIENT_DETAILS" | jq -c '[.callbacks[]]')
           ORIGINS=$(echo "$CLIENT_DETAILS" | jq -c '[.web_origins[]]')
           LOGOUT_URLS=$(echo "$CLIENT_DETAILS" | jq -c '[.allowed_logout_urls[]]')
@@ -93,16 +93,15 @@ jobs:
           PEARLS_AUTH0_CLIENT_ID: q1VmztarYLEAZ7ecuEgdna5BYmL0qCME
           AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
 
-        - name: Post Comment on Pull Request
-            if: github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/prod'
-            run: |
-                PR_NUMBER=$(echo "${GITHUB_REF#refs/heads/}")
-                PREVIEW_URL=${{ env.PREVIEW_URL }}
-                COMMENT_BODY='{"body":"Preview deployment: [Preview Link]('${PREVIEW_URL}')"}'
-                curl -s -X POST \
-                  -H "Accept: application/vnd.github.v3+json" \
-                  -H "Authorization: Bearer ${{ secrets.GIT_TOKEN }}" \
-                  -H "X-GitHub-Api-Version: 2022-11-28" \
-                  -d "$COMMENT_BODY" \
-                    "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/comments"
-
+      - name: Post Comment on Pull Request
+        if: github.event_name == 'push' && github.ref != 'refs/heads/main' && github.ref != 'refs/heads/prod'
+        run: |
+          PR_NUMBER=$(echo "${GITHUB_REF#refs/heads/}")
+          PREVIEW_URL=${{ env.PREVIEW_URL }}
+          COMMENT_BODY='{"body":"Preview deployment: [Preview Link]('${PREVIEW_URL}')"}'
+          curl -s -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -d "$COMMENT_BODY" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}/comments"
