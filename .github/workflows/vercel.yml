@@ -93,7 +93,7 @@ jobs:
           PEARLS_AUTH0_CLIENT_ID: q1VmztarYLEAZ7ecuEgdna5BYmL0qCME
           AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
 
-     - name: Add a comment to the pull request
+      - name: Add a comment to the pull request
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GIT_TOKEN }}
