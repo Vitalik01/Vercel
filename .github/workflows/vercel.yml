@@ -15,7 +15,7 @@ jobs:
       - name: Add a comment to the pull request
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GIT_TOKEN }}
           script: |
             const { github } = require('@actions/github');
 
