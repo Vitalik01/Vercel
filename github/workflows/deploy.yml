@@ -1,4 +1,4 @@
-name: Automatic Deploy to Vercel and comment
+name: Automatic Deploy to Vercel 
 
 on:
   push:
