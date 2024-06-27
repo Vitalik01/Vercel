@@ -91,7 +91,7 @@ jobs:
           AUTH0_DOMAIN: pearls-dev.eu.auth0.com
           AUTH0_CLIENT_ID: 7CpRLhbKMKq4XQOikgU1L9eF9mx1YGi8
           PEARLS_AUTH0_CLIENT_ID: q1VmztarYLEAZ7ecuEgdna5BYmL0qCME
-          AUTH0_CLIENT_SECRET: 3ks1rV-5y51SbExg5diygRrTfeJFTbrzdCsX2xqoAcloazEn04Hl82aLvUXRfzEH
+          AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
 
       - name: Comment on Pull Request
         if: github.event.pull_request.head.ref != 'main' && github.event.pull_request.head.ref != 'prod'
@@ -99,8 +99,8 @@ jobs:
           PR_NUMBER=${{ github.event.pull_request.number }}
           PREVIEW_URL=${{ env.PREVIEW_URL }}
           COMMENT="Preview deployment: [Preview Link](${PREVIEW_URL})"
-          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          curl -s -H "Authorization: token ${{ secrets.GIT_TOKEN }}" \
                -d "{\"body\":\"$COMMENT\"}" \
                -X POST "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
