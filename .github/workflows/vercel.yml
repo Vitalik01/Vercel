@@ -1,12 +1,9 @@
-name: Automatic Deploy to Vercel and comment
+name: Automatic Deploy to Vercel 
 
-on:
-  push:
-    branches:
-      - main
-      - preview
-      - staging
-      - production
+
+on: pull_request
+
+
 
 jobs:
   deploy:
@@ -29,32 +26,31 @@ jobs:
         run: |
           vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
           # Capture the preview URL
-          PREVIEW_URL=$(vercel --json | jq -r '.[0].url')
+          echo "::set-output name=PREVIEW_URL::$(vercel --json | jq -r '.[0].url')"
+
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Staging
         if: github.ref == 'refs/heads/staging'
         run: |
-         vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
-         # Capture the preview URL
-          PREVIEW_URL=$(vercel --json | jq -r '.[0].url')
+          vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
+          # Capture the preview URL
+          echo "::set-output name=PREVIEW_URL::$(vercel --json | jq -r '.[0].url')"
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} 
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
         run: |
-         vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
-         # Capture the preview URL
-          PREVIEW_URL=$(vercel --json | jq -r '.[0].url')
+        vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Comment on Pull Request
-        if: github.event_name == 'pull_request'
         run: |
           PR_NUMBER=$(echo "${{ github.event.ref }}" | awk -F/ '{print $3}')
           COMMENT="Preview deployment: [Preview Link](${PREVIEW_URL})"
         env:
           PREVIEW_URL: ${{ steps.deploy.outputs.PREVIEW_URL }}
+
