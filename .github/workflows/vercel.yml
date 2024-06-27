@@ -26,4 +26,4 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.GIT_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d "$COMMENT_BODY" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
+            "https://api.github.com/repos/${{ github.repository }}/issues/2/comments"
