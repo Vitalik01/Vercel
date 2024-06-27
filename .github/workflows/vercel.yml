@@ -50,7 +50,7 @@ jobs:
 
       - name: Comment on Pull Request
         if: github.event.pull_request.head.ref != 'main' && github.event.pull_request.head.ref != 'prod'
-         run: |
+        run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
           PREVIEW_URL=${{ env.PREVIEW_URL }}
           COMMENT="Preview deployment: [Preview Link](${PREVIEW_URL})"
