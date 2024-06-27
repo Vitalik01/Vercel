@@ -27,8 +27,8 @@ jobs:
         if: github.ref == 'refs/heads/Create-yml-for-vercel-Deploy'
         run: |
           vercel --prod=false --token ${{ secrets.VERCEL_TOKEN }} --confirm 
-          PREVIEW_URL=$(vercel ls --token ${{ secrets.VERCEL_TOKEN }} | awk '{print $2}')
-          echo "::set-output name=PREVIEW_URL::$PREVIEW_URL"
+          PREVIEW_URL=$(vercel ls --token ${{ secrets.VERCEL_TOKEN }}
+           echo "::set-output name=PREVIEW_URL::$PREVIEW_URL"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
@@ -36,7 +36,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           vercel --prod=false --token ${{ secrets.VERCEL_TOKEN }} --confirm
-          PREVIEW_URL=$(vercel ls --token ${{ secrets.VERCEL_TOKEN }} | awk '{print $2}')
+           PREVIEW_URL=$(vercel ls --token ${{ secrets.VERCEL_TOKEN }}
           echo "::set-output name=PREVIEW_URL::$PREVIEW_URL"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -45,7 +45,7 @@ jobs:
         if: github.ref == 'refs/heads/prod'
         run: |
           vercel --prod=true --token ${{ secrets.VERCEL_TOKEN }} --confirm
-          PREVIEW_URL=$(vercel ls --token ${{ secrets.VERCEL_TOKEN }} | awk '{print $2}')
+           PREVIEW_URL=$(vercel ls --token ${{ secrets.VERCEL_TOKEN }}
           echo "::set-output name=PREVIEW_URL::$PREVIEW_URL"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
