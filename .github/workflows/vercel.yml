@@ -21,7 +21,7 @@ jobs:
       - name: Post Comment on Pull Request
         run: |
           PR_NUMBER=${{ github.event.issue.number }}
-          COMMENT_BODY="deploy done"
+          COMMENT_BODY=$(jq -n --arg body "deploy done" '{body: $body}')
           curl -s -L -X POST \
             -H "Authorization: Bearer ${{ secrets.GIT_TOKEN }}" \
             -H "Content-Type: application/json" \
