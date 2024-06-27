@@ -31,17 +31,17 @@ jobs:
           # Capture the preview URL
           PREVIEW_URL=$(vercel --json | jq -r '.[0].url')
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} --confirm false
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }} --confirm yes
 
       - name: Deploy to Staging
         if: github.ref == 'refs/heads/staging'
-        run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm false
+        run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm yes
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Production
         if: github.ref == 'refs/heads/main'
-        run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm false
+        run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --confirm yes
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
