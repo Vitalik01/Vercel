@@ -1,34 +1,29 @@
-name: Automatic Deploy to Vercel
+name: Comment on Pull Request
 
 on:
-  push:
-    branches:
-      - "**"
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
-  deploy:
+  comment:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: "20"
 
       - name: Add a comment to the pull request
         uses: actions/github-script@v6
         with:
-          github-token: ${{ secrets.GIT_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { github, context } = require('@actions/github');
-            const message = `Preview deployment:`;
+            const { context, github } = require('@actions/github');
 
-            await github.getOctokit(process.env.GIT_TOKEN).issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+            // Customize your comment message here
+            const message = "Thank you for your pull request! We will review it soon.";
+
+            await github.issues.createComment({
+              ...context.repo,
               issue_number: context.issue.number,
               body: message
             });
