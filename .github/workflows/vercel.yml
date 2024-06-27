@@ -1,29 +1,29 @@
-name: Comment on Pull Request
+name: Automatic Deploy to Vercel
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  push:
+    branches:
+      - "**"
 
 jobs:
-  comment:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Add a comment to the pull request
-        uses: actions/github-script@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
         with:
-          github-token: ${{ secrets.GIT_TOKEN }}
-          script: |
-            const { github } = require('@actions/github');
+          node-version: "20"
 
-            // Customize your comment message here
-            const message = "Thank you for your pull request! We will review it soon.";
-
-            await github.issues.createComment({
-              ...github.context.repo,
-              issue_number: github.context.issue.number,
-              body: message
-            });
+      - name: Post Comment on Pull Request
+        run: |
+          PR_NUMBER=${{ github.event.issue.number }}
+          COMMENT_BODY="deploy done"
+          curl -s -L -X POST \
+            -H "Authorization: Bearer ${{ secrets.GIT_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "$COMMENT_BODY" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
