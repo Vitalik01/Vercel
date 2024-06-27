@@ -23,7 +23,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { context, github } = require('@actions/github');
+            const { github, context } = require('@actions/github');
             const message = `Preview deployment:`;
 
             await github.issues.createComment({
