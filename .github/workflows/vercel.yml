@@ -93,7 +93,7 @@ jobs:
           PEARLS_AUTH0_CLIENT_ID: q1VmztarYLEAZ7ecuEgdna5BYmL0qCME
           AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
 
-       - name: Get PR Number
+      - name: Get PR Number
         id: get_pr
         run: |
           # Get the pull request number associated with the commit
@@ -105,7 +105,7 @@ jobs:
       - name: Post Comment on Pull Request
         if: env.PR_NUMBER != 'null'
         run: |
-          COMMENT_BODY="{\"body\":\"Preview deployment: [Preview Link](${PREVIEW_URL})\"}"
+          COMMENT_BODY=$(jq -n --arg body "Preview deployment: [Preview Link](${PREVIEW_URL})" '{body: $body}')
           curl -s -L -X POST \
             -H "Authorization: Bearer ${{ secrets.GIT_TOKEN }}" \
             -H "Content-Type: application/json" \
